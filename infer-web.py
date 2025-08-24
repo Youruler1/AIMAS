@@ -113,7 +113,9 @@ if if_gpu_ok and len(gpu_infos) > 0:
     gpu_info = "\n".join(gpu_infos)
     default_batch_size = min(mem) // 2
 else:
-    gpu_info = i18n("Unfortunately, you don’t have a usable GPU here to support training.")
+    gpu_info = i18n(
+        "Unfortunately, you don’t have a usable GPU here to support training."
+    )
     default_batch_size = 1
 gpus = "-".join([i[0] for i in gpu_infos])
 
@@ -132,14 +134,27 @@ hubert_model = None
 
 # TOOLS KA FUNCTIONS
 
+
 def safe_load_audio(input_path):
     input_path = input_path.name
     converted = input_path + "_pcm.wav"
-    subprocess.run([
-        "ffmpeg", "-y", "-i", input_path,
-        "-acodec", "pcm_s16le", "-ar", "44100", converted
-    ], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    subprocess.run(
+        [
+            "ffmpeg",
+            "-y",
+            "-i",
+            input_path,
+            "-acodec",
+            "pcm_s16le",
+            "-ar",
+            "44100",
+            converted,
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
     return AudioSegment.from_file(converted)
+
 
 def split_and_zip(uploaded_file, target_rate):
     target_rate = int(target_rate)
@@ -159,8 +174,11 @@ def split_and_zip(uploaded_file, target_rate):
         chunk_files.append(chunk_filename)
 
     zip_path = os.path.join(temp_dir, "audio_chunks.zip")
-    shutil.make_archive(base_name=zip_path.replace(".zip", ""), format="zip", root_dir=chunks_dir)
+    shutil.make_archive(
+        base_name=zip_path.replace(".zip", ""), format="zip", root_dir=chunks_dir
+    )
     return zip_path, chunk_files
+
 
 def convert_format(uploaded_file, target_format):
     audio = safe_load_audio(uploaded_file)
@@ -169,13 +187,15 @@ def convert_format(uploaded_file, target_format):
     audio.export(converted_path, format=target_format)
     return converted_path
 
+
 def trim_audio(uploaded_file, start_sec, end_sec):
     audio = safe_load_audio(uploaded_file)
-    trimmed = audio[int(start_sec * 1000):int(end_sec * 1000)]
+    trimmed = audio[int(start_sec * 1000) : int(end_sec * 1000)]
     temp_dir = tempfile.mkdtemp()
     trimmed_path = os.path.join(temp_dir, "trimmed_audio.wav")
     trimmed.export(trimmed_path, format="wav")
     return trimmed_path
+
 
 def combine_audio(file_list):
     combined = None
@@ -187,18 +207,22 @@ def combine_audio(file_list):
     combined.export(combined_path, format="wav")
     return combined_path
 
+
 def _split_and_return(f, rate):
     zip_path, chunks = split_and_zip(f, rate)
     preview = chunks[0] if chunks else None
     return zip_path, preview
 
+
 def _convert_and_return(f, fmt):
     path = convert_format(f, fmt)
     return path, path
 
+
 def _trim_and_return(f, s, e):
     path = trim_audio(f, s, e)
     return path, path
+
 
 def _combine_and_return(files):
     path = combine_audio(files)
@@ -486,7 +510,9 @@ def get_vc(sid, to_return_protect0, to_return_protect1):
     global n_spk, tgt_sr, net_g, vc, cpt, version
     if sid == "" or sid == []:
         global hubert_model
-        if hubert_model is not None:  # Considering polling, we need to add a check to see whether sid has switched from having a model to not having one.
+        if (
+            hubert_model is not None
+        ):  # Considering polling, we need to add a check to see whether sid has switched from having a model to not having one.
             print("clean_empty_cache")
             del net_g, n_spk, vc, hubert_model, tgt_sr  # ,cpt
             hubert_model = net_g = n_spk = vc = hubert_model = tgt_sr = None
@@ -765,12 +791,16 @@ def change_sr2(sr2, if_f0_3, version19):
             "not exist, will not use pretrained model",
         )
     return (
-        "pretrained%s/%sG%s.pth" % (path_str, f0_str, sr2)
-        if if_pretrained_generator_exist
-        else "",
-        "pretrained%s/%sD%s.pth" % (path_str, f0_str, sr2)
-        if if_pretrained_discriminator_exist
-        else "",
+        (
+            "pretrained%s/%sG%s.pth" % (path_str, f0_str, sr2)
+            if if_pretrained_generator_exist
+            else ""
+        ),
+        (
+            "pretrained%s/%sD%s.pth" % (path_str, f0_str, sr2)
+            if if_pretrained_discriminator_exist
+            else ""
+        ),
     )
 
 
@@ -801,12 +831,16 @@ def change_version19(sr2, if_f0_3, version19):
             "not exist, will not use pretrained model",
         )
     return (
-        "pretrained%s/%sG%s.pth" % (path_str, f0_str, sr2)
-        if if_pretrained_generator_exist
-        else "",
-        "pretrained%s/%sD%s.pth" % (path_str, f0_str, sr2)
-        if if_pretrained_discriminator_exist
-        else "",
+        (
+            "pretrained%s/%sG%s.pth" % (path_str, f0_str, sr2)
+            if if_pretrained_generator_exist
+            else ""
+        ),
+        (
+            "pretrained%s/%sD%s.pth" % (path_str, f0_str, sr2)
+            if if_pretrained_discriminator_exist
+            else ""
+        ),
         to_return_sr2,
     )
 
@@ -832,21 +866,29 @@ def change_f0(if_f0_3, sr2, version19):  # f0method8,pretrained_G14,pretrained_D
     if if_f0_3:
         return (
             {"visible": True, "__type__": "update"},
-            "pretrained%s/f0G%s.pth" % (path_str, sr2)
-            if if_pretrained_generator_exist
-            else "",
-            "pretrained%s/f0D%s.pth" % (path_str, sr2)
-            if if_pretrained_discriminator_exist
-            else "",
+            (
+                "pretrained%s/f0G%s.pth" % (path_str, sr2)
+                if if_pretrained_generator_exist
+                else ""
+            ),
+            (
+                "pretrained%s/f0D%s.pth" % (path_str, sr2)
+                if if_pretrained_discriminator_exist
+                else ""
+            ),
         )
     return (
         {"visible": False, "__type__": "update"},
-        ("pretrained%s/G%s.pth" % (path_str, sr2))
-        if if_pretrained_generator_exist
-        else "",
-        ("pretrained%s/D%s.pth" % (path_str, sr2))
-        if if_pretrained_discriminator_exist
-        else "",
+        (
+            ("pretrained%s/G%s.pth" % (path_str, sr2))
+            if if_pretrained_generator_exist
+            else ""
+        ),
+        (
+            ("pretrained%s/D%s.pth" % (path_str, sr2))
+            if if_pretrained_discriminator_exist
+            else ""
+        ),
     )
 
 
@@ -1265,7 +1307,11 @@ def train1key(
     yield get_info_str(cmd)
     p = Popen(cmd, shell=True, cwd=now_dir)
     p.wait()
-    yield get_info_str(i18n("Training finished, you can check the training logs in the console or in train.log under the experiment folder"))
+    yield get_info_str(
+        i18n(
+            "Training finished, you can check the training logs in the console or in train.log under the experiment folder"
+        )
+    )
     ####### step3b: Train Index
 
     npys = []
@@ -1355,8 +1401,12 @@ def export_onnx(ModelPath, ExportedPath):
     vec_channels = 256 if cpt.get("version", "v1") == "v1" else 768
 
     test_phone = torch.rand(1, 200, vec_channels)  # hidden unit
-    test_phone_lengths = torch.tensor([200]).long()  # length of hidden unit (seems not very useful)
-    test_pitch = torch.randint(size=(1, 200), low=5, high=255)  # fundamental frequency (in Hz)
+    test_phone_lengths = torch.tensor(
+        [200]
+    ).long()  # length of hidden unit (seems not very useful)
+    test_pitch = torch.randint(
+        size=(1, 200), low=5, high=255
+    )  # fundamental frequency (in Hz)
     test_pitchf = torch.rand(1, 200)  # nsf fundamental frequency
     test_ds = torch.LongTensor([0])  # speaker ID
     test_rnd = torch.rand(1, 192, 200)  # noise (adds randomness factor)
@@ -1413,11 +1463,19 @@ with gr.Blocks() as app:
         #     )
         # )
         with gr.Tabs():
-            with gr.TabItem(i18n("Model Inference")): # THIS IS THE MODEL INFERENCE UI PART
+            with gr.TabItem(
+                i18n("Model Inference")
+            ):  # THIS IS THE MODEL INFERENCE UI PART
                 with gr.Row():
-                    sid0 = gr.Dropdown(label=i18n("Inference Voice"), choices=sorted(names))
-                    refresh_button = gr.Button(i18n("Refresh voice list and index path"), variant="primary")
-                    clean_button = gr.Button(i18n("Unload voice to save VRAM"), variant="primary")
+                    sid0 = gr.Dropdown(
+                        label=i18n("Inference Voice"), choices=sorted(names)
+                    )
+                    refresh_button = gr.Button(
+                        i18n("Refresh voice list and index path"), variant="primary"
+                    )
+                    clean_button = gr.Button(
+                        i18n("Unload voice to save VRAM"), variant="primary"
+                    )
                     spk_item = gr.Slider(
                         minimum=0,
                         maximum=2333,
@@ -1430,15 +1488,22 @@ with gr.Blocks() as app:
                     clean_button.click(fn=clean, inputs=[], outputs=[sid0])
                 with gr.Group():
                     gr.Markdown(
-                        value=i18n("Male to female recommended +12 key, female to male recommended -12 key. If vocal range explosion causes timbre distortion, you can adjust to a suitable range yourself.")
+                        value=i18n(
+                            "Male to female recommended +12 key, female to male recommended -12 key. If vocal range explosion causes timbre distortion, you can adjust to a suitable range yourself."
+                        )
                     )
                     with gr.Row():
                         with gr.Column():
                             vc_transform0 = gr.Number(
-                                label=i18n("Pitch shift (integer, semitone count, +12 for one octave up, -12 for one octave down)"), value=0
+                                label=i18n(
+                                    "Pitch shift (integer, semitone count, +12 for one octave up, -12 for one octave down)"
+                                ),
+                                value=0,
                             )
                             input_audio0 = gr.Textbox(
-                                label=i18n("Path of input audio file to process (default is a correct format example)"),
+                                label=i18n(
+                                    "Path of input audio file to process (default is a correct format example)"
+                                ),
                                 value="E:\\codes\\py39\\test-20230416b\\todo-songs\\winter_flower_clip1.wav",
                             )
                             f0method0 = gr.Radio(
@@ -1452,24 +1517,32 @@ with gr.Blocks() as app:
                             filter_radius0 = gr.Slider(
                                 minimum=0,
                                 maximum=7,
-                                label=i18n(">=3 applies median filtering to harvest pitch results. The number is the filter radius. Using it can weaken hoarseness"),
+                                label=i18n(
+                                    ">=3 applies median filtering to harvest pitch results. The number is the filter radius. Using it can weaken hoarseness"
+                                ),
                                 value=3,
                                 step=1,
                                 interactive=True,
                             )
                         with gr.Column():
                             file_index1 = gr.Textbox(
-                                label=i18n("Feature index library file path. Leave empty to use dropdown selection result"),
+                                label=i18n(
+                                    "Feature index library file path. Leave empty to use dropdown selection result"
+                                ),
                                 value="",
                                 interactive=True,
                             )
                             file_index2 = gr.Dropdown(
-                                label=i18n("Auto-detected index path, dropdown selection"),
+                                label=i18n(
+                                    "Auto-detected index path, dropdown selection"
+                                ),
                                 choices=sorted(index_paths),
                                 interactive=True,
                             )
                             refresh_button.click(
-                                fn=change_choices, inputs=[], outputs=[sid0, file_index2]
+                                fn=change_choices,
+                                inputs=[],
+                                outputs=[sid0, file_index2],
                             )
                             index_rate1 = gr.Slider(
                                 minimum=0,
@@ -1482,7 +1555,9 @@ with gr.Blocks() as app:
                             resample_sr0 = gr.Slider(
                                 minimum=0,
                                 maximum=48000,
-                                label=i18n("Resample after processing to final sample rate. 0 means no resampling"),
+                                label=i18n(
+                                    "Resample after processing to final sample rate. 0 means no resampling"
+                                ),
                                 value=0,
                                 step=1,
                                 interactive=True,
@@ -1490,7 +1565,9 @@ with gr.Blocks() as app:
                             rms_mix_rate0 = gr.Slider(
                                 minimum=0,
                                 maximum=1,
-                                label=i18n("Mix ratio of replacing source volume envelope with output envelope. Closer to 1 uses output envelope more"),
+                                label=i18n(
+                                    "Mix ratio of replacing source volume envelope with output envelope. Closer to 1 uses output envelope more"
+                                ),
                                 value=0.25,
                                 interactive=True,
                             )
@@ -1504,11 +1581,19 @@ with gr.Blocks() as app:
                                 step=0.01,
                                 interactive=True,
                             )
-                        f0_file = gr.File(label=i18n("F0 curve file, optional. One pitch per line, replaces default F0 and pitch shift"))
+                        f0_file = gr.File(
+                            label=i18n(
+                                "F0 curve file, optional. One pitch per line, replaces default F0 and pitch shift"
+                            )
+                        )
                         but0 = gr.Button(i18n("Convert"), variant="primary")
                         with gr.Row():
                             vc_output1 = gr.Textbox(label=i18n("Output info"))
-                            vc_output2 = gr.Audio(label=i18n("Output audio (Click bottom right three dots to download)"))
+                            vc_output2 = gr.Audio(
+                                label=i18n(
+                                    "Output audio (Click bottom right three dots to download)"
+                                )
+                            )
                         but0.click(
                             vc_single,
                             [
@@ -1529,14 +1614,21 @@ with gr.Blocks() as app:
                         )
                 with gr.Group():
                     gr.Markdown(
-                        value=i18n("Batch conversion. Input the folder of audio files to convert, or upload multiple audio files. The converted audio will be output to the specified folder (default opt).")
+                        value=i18n(
+                            "Batch conversion. Input the folder of audio files to convert, or upload multiple audio files. The converted audio will be output to the specified folder (default opt)."
+                        )
                     )
                     with gr.Row():
                         with gr.Column():
                             vc_transform1 = gr.Number(
-                                label=i18n("Pitch shift (integer, semitone count, +12 for one octave up, -12 for one octave down)"), value=0
+                                label=i18n(
+                                    "Pitch shift (integer, semitone count, +12 for one octave up, -12 for one octave down)"
+                                ),
+                                value=0,
                             )
-                            opt_input = gr.Textbox(label=i18n("Specify output folder"), value="opt")
+                            opt_input = gr.Textbox(
+                                label=i18n("Specify output folder"), value="opt"
+                            )
                             f0method1 = gr.Radio(
                                 label=i18n(
                                     "Choose pitch extraction algorithm. For singing input, pm speeds up; harvest handles low pitch well but is very slow; crepe works well but uses GPU"
@@ -1548,19 +1640,25 @@ with gr.Blocks() as app:
                             filter_radius1 = gr.Slider(
                                 minimum=0,
                                 maximum=7,
-                                label=i18n(">=3 applies median filtering to harvest pitch results. The number is the filter radius. Using it can weaken hoarseness"),
+                                label=i18n(
+                                    ">=3 applies median filtering to harvest pitch results. The number is the filter radius. Using it can weaken hoarseness"
+                                ),
                                 value=3,
                                 step=1,
                                 interactive=True,
                             )
                         with gr.Column():
                             file_index3 = gr.Textbox(
-                                label=i18n("Feature index library file path. Leave empty to use dropdown selection result"),
+                                label=i18n(
+                                    "Feature index library file path. Leave empty to use dropdown selection result"
+                                ),
                                 value="",
                                 interactive=True,
                             )
                             file_index4 = gr.Dropdown(
-                                label=i18n("Auto-detected index path, dropdown selection"),
+                                label=i18n(
+                                    "Auto-detected index path, dropdown selection"
+                                ),
                                 choices=sorted(index_paths),
                                 interactive=True,
                             )
@@ -1580,7 +1678,9 @@ with gr.Blocks() as app:
                             resample_sr1 = gr.Slider(
                                 minimum=0,
                                 maximum=48000,
-                                label=i18n("Resample after processing to final sample rate. 0 means no resampling"),
+                                label=i18n(
+                                    "Resample after processing to final sample rate. 0 means no resampling"
+                                ),
                                 value=0,
                                 step=1,
                                 interactive=True,
@@ -1588,7 +1688,9 @@ with gr.Blocks() as app:
                             rms_mix_rate1 = gr.Slider(
                                 minimum=0,
                                 maximum=1,
-                                label=i18n("Mix ratio of replacing source volume envelope with output envelope. Closer to 1 uses output envelope more"),
+                                label=i18n(
+                                    "Mix ratio of replacing source volume envelope with output envelope. Closer to 1 uses output envelope more"
+                                ),
                                 value=1,
                                 interactive=True,
                             )
@@ -1604,11 +1706,16 @@ with gr.Blocks() as app:
                             )
                         with gr.Column():
                             dir_input = gr.Textbox(
-                                label=i18n("Path of folder containing audio files to process (copy from file manager address bar)"),
+                                label=i18n(
+                                    "Path of folder containing audio files to process (copy from file manager address bar)"
+                                ),
                                 value="E:\\codes\\py39\\test-20230416b\\todo-songs",
                             )
                             inputs = gr.File(
-                                file_count="multiple", label=i18n("Alternatively, batch input audio files. Either-or. Folder has priority")
+                                file_count="multiple",
+                                label=i18n(
+                                    "Alternatively, batch input audio files. Either-or. Folder has priority"
+                                ),
                             )
                         with gr.Row():
                             format1 = gr.Radio(
@@ -1645,14 +1752,16 @@ with gr.Blocks() as app:
                     outputs=[spk_item, protect0, protect1],
                 )
 
-            with gr.TabItem(i18n("Training")): # THIS IS THE TRAIN TAB UI PART
+            with gr.TabItem(i18n("Training")):  # THIS IS THE TRAIN TAB UI PART
                 gr.Markdown(
                     value=i18n(
                         "step1: Fill in experiment configuration. Training data is placed in logs. Each experiment has its own folder containing configuration, logs, and models obtained from training. You must manually input the experiment name path."
                     )
                 )
                 with gr.Row():
-                    exp_dir1 = gr.Textbox(label=i18n("Input experiment name"), value="mi-test")
+                    exp_dir1 = gr.Textbox(
+                        label=i18n("Input experiment name"), value="mi-test"
+                    )
                     sr2 = gr.Radio(
                         label=i18n("Target sample rate"),
                         choices=["40k", "48k"],
@@ -1660,7 +1769,9 @@ with gr.Blocks() as app:
                         interactive=True,
                     )
                     if_f0_3 = gr.Radio(
-                        label=i18n("Does the model use pitch guidance (required for singing, optional for speech)"),
+                        label=i18n(
+                            "Does the model use pitch guidance (required for singing, optional for speech)"
+                        ),
                         choices=[True, False],
                         value=True,
                         interactive=True,
@@ -1676,7 +1787,9 @@ with gr.Blocks() as app:
                         minimum=0,
                         maximum=config.n_cpu,
                         step=1,
-                        label=i18n("Number of CPU processes used for pitch extraction and data processing"),
+                        label=i18n(
+                            "Number of CPU processes used for pitch extraction and data processing"
+                        ),
                         value=int(np.ceil(config.n_cpu / 1.5)),
                         interactive=True,
                     )
@@ -1688,7 +1801,8 @@ with gr.Blocks() as app:
                     )
                     with gr.Row():
                         trainset_dir4 = gr.Textbox(
-                            label=i18n("Input training folder path"), value="E:\\SpeechAudio+Annotations\\YonezuKenshi\\src"
+                            label=i18n("Input training folder path"),
+                            value="E:\\SpeechAudio+Annotations\\YonezuKenshi\\src",
                         )
                         spk_id5 = gr.Slider(
                             minimum=0,
@@ -1701,19 +1815,29 @@ with gr.Blocks() as app:
                         but1 = gr.Button(i18n("Process data"), variant="primary")
                         info1 = gr.Textbox(label=i18n("Output info"), value="")
                         but1.click(
-                            preprocess_dataset, [trainset_dir4, exp_dir1, sr2, np7], [info1]
+                            preprocess_dataset,
+                            [trainset_dir4, exp_dir1, sr2, np7],
+                            [info1],
                         )
 
                 with gr.Group():
-                    gr.Markdown(value=i18n("step2b: Use CPU to extract pitch (if model uses pitch), GPU to extract features (choose GPU IDs)"))
+                    gr.Markdown(
+                        value=i18n(
+                            "step2b: Use CPU to extract pitch (if model uses pitch), GPU to extract features (choose GPU IDs)"
+                        )
+                    )
                     with gr.Row():
                         with gr.Column():
                             gpus6 = gr.Textbox(
-                                label=i18n("Input GPU IDs separated by dash, e.g. 0-1-2 uses GPUs 0,1,2"),
+                                label=i18n(
+                                    "Input GPU IDs separated by dash, e.g. 0-1-2 uses GPUs 0,1,2"
+                                ),
                                 value=gpus,
                                 interactive=True,
                             )
-                            gpu_info9 = gr.Textbox(label=i18n("GPU info"), value=gpu_info)
+                            gpu_info9 = gr.Textbox(
+                                label=i18n("GPU info"), value=gpu_info
+                            )
                         with gr.Column():
                             f0method8 = gr.Radio(
                                 label=i18n(
@@ -1724,7 +1848,9 @@ with gr.Blocks() as app:
                                 interactive=True,
                             )
                         but2 = gr.Button(i18n("Extract features"), variant="primary")
-                        info2 = gr.Textbox(label=i18n("Output info"), value="", max_lines=8)
+                        info2 = gr.Textbox(
+                            label=i18n("Output info"), value="", max_lines=8
+                        )
                         but2.click(
                             extract_f0_feature,
                             [gpus6, np7, f0method8, if_f0_3, exp_dir1, version19],
@@ -1732,7 +1858,11 @@ with gr.Blocks() as app:
                         )
 
                 with gr.Group():
-                    gr.Markdown(value=i18n("step3: Fill in training settings and start training model and index"))
+                    gr.Markdown(
+                        value=i18n(
+                            "step3: Fill in training settings and start training model and index"
+                        )
+                    )
                     with gr.Row():
                         save_epoch10 = gr.Slider(
                             minimum=0,
@@ -1759,7 +1889,9 @@ with gr.Blocks() as app:
                             interactive=True,
                         )
                         if_save_latest13 = gr.Radio(
-                            label=i18n("Save only latest checkpoint to save disk space"),
+                            label=i18n(
+                                "Save only latest checkpoint to save disk space"
+                            ),
                             choices=[i18n("Yes"), i18n("No")],
                             value=i18n("No"),
                             interactive=True,
@@ -1773,7 +1905,9 @@ with gr.Blocks() as app:
                             interactive=True,
                         )
                         if_save_every_weights18 = gr.Radio(
-                            label=i18n("Save final small model to weights folder at every save point"),
+                            label=i18n(
+                                "Save final small model to weights folder at every save point"
+                            ),
                             choices=[i18n("Yes"), i18n("No")],
                             value=i18n("No"),
                             interactive=True,
@@ -1806,15 +1940,18 @@ with gr.Blocks() as app:
                             [f0method8, pretrained_G14, pretrained_D15],
                         )
                         gpus16 = gr.Textbox(
-                            label=i18n("Enter GPU IDs separated by '-', e.g. 0-1-2 for using GPU 0, 1, and 2"),
+                            label=i18n(
+                                "Enter GPU IDs separated by '-', e.g. 0-1-2 for using GPU 0, 1, and 2"
+                            ),
                             value=gpus,
                             interactive=True,
                         )
                         but3 = gr.Button(i18n("Train Model"), variant="primary")
                         but4 = gr.Button(i18n("Train Feature Index"), variant="primary")
                         but5 = gr.Button(i18n("One-Click Training"), variant="primary")
-                        info3 = gr.Textbox(label=i18n("Output Information"), value="",
-                        max_lines=10)
+                        info3 = gr.Textbox(
+                            label=i18n("Output Information"), value="", max_lines=10
+                        )
                         but3.click(
                             click_train,
                             [
@@ -1859,12 +1996,20 @@ with gr.Blocks() as app:
                             ],
                             info3,
                         )
-            with gr.TabItem(i18n("CKPT Processing")):  # THIS IS THE CKPT PROCESSING UI PART
+            with gr.TabItem(
+                i18n("CKPT Processing")
+            ):  # THIS IS THE CKPT PROCESSING UI PART
                 with gr.Group():
-                    gr.Markdown(value=i18n("Model fusion, can be used to test timbre fusion"))
+                    gr.Markdown(
+                        value=i18n("Model fusion, can be used to test timbre fusion")
+                    )
                     with gr.Row():
-                        ckpt_a = gr.Textbox(label=i18n("Model A Path"), value="", interactive=True)
-                        ckpt_b = gr.Textbox(label=i18n("Model B Path"), value="", interactive=True)
+                        ckpt_a = gr.Textbox(
+                            label=i18n("Model A Path"), value="", interactive=True
+                        )
+                        ckpt_b = gr.Textbox(
+                            label=i18n("Model B Path"), value="", interactive=True
+                        )
                         alpha_a = gr.Slider(
                             minimum=0,
                             maximum=1,
@@ -1886,7 +2031,10 @@ with gr.Blocks() as app:
                             interactive=True,
                         )
                         info__ = gr.Textbox(
-                            label=i18n("Model Info to Insert"), value="", max_lines=8, interactive=True
+                            label=i18n("Model Info to Insert"),
+                            value="",
+                            max_lines=8,
+                            interactive=True,
                         )
                         name_to_save0 = gr.Textbox(
                             label=i18n("Name of Saved Model (without suffix)"),
@@ -1902,7 +2050,9 @@ with gr.Blocks() as app:
                         )
                     with gr.Row():
                         but6 = gr.Button(i18n("Merge"), variant="primary")
-                        info4 = gr.Textbox(label=i18n("Output Info"), value="", max_lines=8)
+                        info4 = gr.Textbox(
+                            label=i18n("Output Info"), value="", max_lines=8
+                        )
                     but6.click(
                         merge,
                         [
@@ -1919,33 +2069,50 @@ with gr.Blocks() as app:
                     )  # def merge(path1, path2, alpha1, sr, f0, info):
 
                 with gr.Group():
-                    gr.Markdown(value=i18n("Edit Model Info (only supports small model files extracted under the weights folder)"))
+                    gr.Markdown(
+                        value=i18n(
+                            "Edit Model Info (only supports small model files extracted under the weights folder)"
+                        )
+                    )
                     with gr.Row():
                         ckpt_path0 = gr.Textbox(
                             label=i18n("Model Path"), value="", interactive=True
                         )
                         info_ = gr.Textbox(
-                            label=i18n("Model Info to Modify"), value="", max_lines=8, interactive=True
+                            label=i18n("Model Info to Modify"),
+                            value="",
+                            max_lines=8,
+                            interactive=True,
                         )
                         name_to_save1 = gr.Textbox(
-                            label=i18n("Save Filename (default empty = same as source file)"),
+                            label=i18n(
+                                "Save Filename (default empty = same as source file)"
+                            ),
                             value="",
                             max_lines=8,
                             interactive=True,
                         )
                     with gr.Row():
                         but7 = gr.Button(i18n("Modify"), variant="primary")
-                        info5 = gr.Textbox(label=i18n("Output Info"), value="", max_lines=8)
+                        info5 = gr.Textbox(
+                            label=i18n("Output Info"), value="", max_lines=8
+                        )
                     but7.click(change_info, [ckpt_path0, info_, name_to_save1], info5)
 
                 with gr.Group():
-                    gr.Markdown(value=i18n("View Model Info (only supports small model files extracted under the weights folder)"))
+                    gr.Markdown(
+                        value=i18n(
+                            "View Model Info (only supports small model files extracted under the weights folder)"
+                        )
+                    )
                     with gr.Row():
                         ckpt_path1 = gr.Textbox(
                             label=i18n("Model Path"), value="", interactive=True
                         )
                         but8 = gr.Button(i18n("View"), variant="primary")
-                        info6 = gr.Textbox(label=i18n("Output Info"), value="", max_lines=8)
+                        info6 = gr.Textbox(
+                            label=i18n("Output Info"), value="", max_lines=8
+                        )
                     but8.click(show_info, [ckpt_path1], info6)
 
                 with gr.Group():
@@ -1972,7 +2139,9 @@ with gr.Blocks() as app:
                             interactive=True,
                         )
                         if_f0__ = gr.Radio(
-                            label=i18n("Does the model include pitch guidance (1 = Yes, 0 = No)"),
+                            label=i18n(
+                                "Does the model include pitch guidance (1 = Yes, 0 = No)"
+                            ),
                             choices=["1", "0"],
                             value="1",
                             interactive=True,
@@ -1984,10 +2153,15 @@ with gr.Blocks() as app:
                             interactive=True,
                         )
                         info___ = gr.Textbox(
-                            label=i18n("Model Info to Insert"), value="", max_lines=8, interactive=True
+                            label=i18n("Model Info to Insert"),
+                            value="",
+                            max_lines=8,
+                            interactive=True,
                         )
                         but9 = gr.Button(i18n("Extract"), variant="primary")
-                        info7 = gr.Textbox(label=i18n("Output Info"), value="", max_lines=8)
+                        info7 = gr.Textbox(
+                            label=i18n("Output Info"), value="", max_lines=8
+                        )
                         ckpt_path2.change(
                             change_info_, [ckpt_path2], [sr__, if_f0__, version_1]
                         )
@@ -2028,11 +2202,6 @@ with gr.Blocks() as app:
             # with gr.TabItem(i18n("点击查看交流、问题反馈群号")):
             #     gr.Markdown(value=i18n("xxxxx"))
 
-
-
-
-
-
     # TOOLS Interface (hidden by default, shown when TOOLS button is clicked)
     with gr.Column(visible=False) as tools_interface:
         gr.Markdown("## 🎧 Audio Tools")
@@ -2044,11 +2213,17 @@ with gr.Blocks() as app:
             zip_out = gr.File(label="Download chunks ZIP")
             audio_out1 = gr.Audio(label="Preview first chunk")
 
-            btn_split.click(_split_and_return, [file1, target_rate], [zip_out, audio_out1])
+            btn_split.click(
+                _split_and_return, [file1, target_rate], [zip_out, audio_out1]
+            )
 
         with gr.Tab("Convert Format"):
             file2 = gr.File(label="Upload audio", file_types=["audio"])
-            fmt = gr.Dropdown(choices=["wav", "mp3", "flac", "ogg", "aac"], value="wav", label="Target format")
+            fmt = gr.Dropdown(
+                choices=["wav", "mp3", "flac", "ogg", "aac"],
+                value="wav",
+                label="Target format",
+            )
             btn_convert = gr.Button("Convert")
             conv_out = gr.File(label="Download converted file")
             audio_out2 = gr.Audio(label="Preview")
@@ -2063,10 +2238,16 @@ with gr.Blocks() as app:
             trim_out = gr.File(label="Download trimmed file")
             audio_out3 = gr.Audio(label="Preview trimmed")
 
-            btn_trim.click(_trim_and_return, [file3, start, end], [trim_out, audio_out3])
+            btn_trim.click(
+                _trim_and_return, [file3, start, end], [trim_out, audio_out3]
+            )
 
         with gr.Tab("Combine Audio"):
-            file4 = gr.File(label="Upload multiple audio files", file_types=["audio"], file_count="multiple")
+            file4 = gr.File(
+                label="Upload multiple audio files",
+                file_types=["audio"],
+                file_count="multiple",
+            )
             btn_combine = gr.Button("Combine")
             comb_out = gr.File(label="Download combined file")
             audio_out4 = gr.Audio(label="Preview combined")
@@ -2077,17 +2258,13 @@ with gr.Blocks() as app:
     rvc_button.click(
         fn=lambda: (gr.update(visible=True), gr.update(visible=False)),
         inputs=[],
-        outputs=[rvc_interface, tools_interface]
+        outputs=[rvc_interface, tools_interface],
     )
     tools_button.click(
         fn=lambda: (gr.update(visible=False), gr.update(visible=True)),
         inputs=[],
-        outputs=[rvc_interface, tools_interface]
+        outputs=[rvc_interface, tools_interface],
     )
 
     # Launch the app
-    app.queue(concurrency_count=511, max_size=1022).launch(
-        share=True,
-        inbrowser=True
-    )
-
+    app.queue(concurrency_count=511, max_size=1022).launch(share=True, inbrowser=True)
